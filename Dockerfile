@@ -1,6 +1,9 @@
 FROM openjdk:17-jdk-alpine
 
-ARG JAR_FILE=./temperature-monitor.jar
+# build jar file
+RUN mvn clean package
+
+ARG JAR_FILE=./target/temeprature-monitor-1.0-SNAPSHOT.jar
 ARG PROP_FILE=./config.properties
 
 # cd /usr/local/runme
