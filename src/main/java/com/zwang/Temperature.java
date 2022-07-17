@@ -5,17 +5,13 @@ public class Temperature {
     private int value;
     private String timestampString;
 
-  
-
-    public Temperature(long timestamp,  String timeString, int value) {
+      public Temperature(long timestamp,  String timeString, int value) {
         this.timestamp = timestamp;
         this.timestampString = timeString;
         this.value = value;
 
     }
    
-
-
     public long getTimestamp() {
         return this.timestamp;
     }

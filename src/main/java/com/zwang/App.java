@@ -1,7 +1,5 @@
 package com.zwang;
 
-import com.zwang.Temperature;
-
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -19,21 +17,16 @@ import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.channel.Channel;
 
 import java.util.Date;
-import java.sql.Timestamp;
 
 import java.util.*;
 import javax.mail.*;
 import javax.mail.internet.*;
-import javax.activation.*;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.List;
+
 
 
 public class App {
