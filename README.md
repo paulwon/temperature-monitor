@@ -17,14 +17,27 @@ The file "config.properties" needs to be placed under the same directory where t
 
 The example of the file "config.properties":
 ```
+# SSH login name of the AP
 username=admin
+# SSH login password
 password=xxx
+# IP of the AP
 host=1.2.3.4
+# SSH port
 port=22
+# CLI command to show temperature
 command=show sys temp\n
+# Interval of running the SSH command
+intervalMinutes=1
+# Gmail user name used for sending emaisl
 emailUsername=xxx@gmail.com
+# Gmail app password for SMTP
 emailPassword=xxx
+# Recipient of the alert emails
 emailTo=xxx@domain.com
+# Threshold of the temperature that will trigger the alert email
 temperatureThreshold=55
+# Threshold of the temperature (temperatureThreshold - temperatureThresholdDiff) that will trigger the recovery email
 temperatureThresholdDiff=4
+
 ```

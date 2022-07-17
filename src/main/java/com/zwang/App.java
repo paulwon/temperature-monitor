@@ -37,7 +37,7 @@ import java.util.List;
 
 
 public class App {
-    private static final int minutes = 1;
+    private static  int intervalMinutes;
     private static  int temperatureThreshold;
     private static  int temperatureRecoveryThreshold;
     private static  int temperatureThresholdDiff;
@@ -56,13 +56,14 @@ public class App {
         prop.load(input);
         String username = prop.getProperty("username");
         String password = prop.getProperty("password");
+
         emailUsername = prop.getProperty("emailUsername");
         emailPassword = prop.getProperty("emailPassword");
         emailTo = prop.getProperty("emailTo");
         temperatureThreshold =  Integer.parseInt(prop.getProperty("temperatureThreshold"));
         temperatureThresholdDiff =  Integer.parseInt(prop.getProperty("temperatureThresholdDiff"));
-
         temperatureRecoveryThreshold = temperatureThreshold - temperatureThresholdDiff;
+        intervalMinutes = Integer.parseInt(prop.getProperty("intervalMinutes"));
 
         String host = prop.getProperty("host");
         int port = Integer.parseInt(prop.getProperty("port"));
@@ -88,7 +89,7 @@ public class App {
         };
 
         ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
-        exec.scheduleAtFixedRate(appEntryRunnable , 0, minutes, TimeUnit.MINUTES);
+        exec.scheduleAtFixedRate(appEntryRunnable , 0, intervalMinutes, TimeUnit.MINUTES);
 
     }
     
@@ -96,7 +97,7 @@ public class App {
         String temperatureStr = sshToAp(username, password, host, port, defaultTimeoutSeconds, command);
         // System.out.println(temperatureStr);
         Temperature temperature =  getTemperature(temperatureStr);
-        System.out.println(temperature.getTimestamp() + " " + temperature.getValue());
+        System.out.println(temperature.getTimestamp() + ", " + temperature.getTimestampString() + ", " + temperature.getValue());
         writeFile(temperature);
         if (temperature.getValue() >= temperatureThreshold) {
             String msg = "Temperature is too high !!!. The current temperature is " + temperature.getValue();
@@ -129,7 +130,9 @@ public class App {
     }
 
     private static void writeFile(Temperature temperature) throws IOException {
-        String textToAppend = "{\"timestamp\":" + temperature.getTimestamp() + "," + "\"value\":" + temperature.getValue() + "}";
+        String textToAppend = "{\"timestamp\":" + temperature.getTimestamp() 
+            + "," + "\"timestampString\":" + "\"" +temperature.getTimestampString() + "\""
+            + "," + "\"value\":" + temperature.getValue() + "}";
         FileWriter fileWriter = new FileWriter(jsonFilePath, true);
         try (PrintWriter printWriter = new PrintWriter(fileWriter)) {
             printWriter.println(textToAppend);
@@ -161,8 +164,10 @@ public class App {
 
        Date date= new Date();
        long timestamp = date.getTime();
+       String timestampString = date.toString();
+
     //    System.out.println("Time in Milliseconds: " + timestamp);
-       return new Temperature(timestamp, value);
+       return new Temperature(timestamp, timestampString, value);
        
     }
     
