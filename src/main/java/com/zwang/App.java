@@ -40,6 +40,7 @@ public class App {
     private static String emailPassword = "";
     private static String emailTo = "";
     private static String jsonFilePath = "./temperature.json";
+    private static String msgTemperatureThresholdDeails;
 
     
     public static void main(String[] args) throws Exception {
@@ -57,6 +58,8 @@ public class App {
         temperatureThresholdDiff =  Integer.parseInt(prop.getProperty("temperatureThresholdDiff"));
         temperatureRecoveryThreshold = temperatureThreshold - temperatureThresholdDiff;
         intervalMinutes = Integer.parseInt(prop.getProperty("intervalMinutes"));
+        msgTemperatureThresholdDeails = "\nThreshold triggering alert notification:  " + temperatureThreshold + 
+            "\nThreshold triggering recovery notification:  " + temperatureRecoveryThreshold;
 
         String host = prop.getProperty("host");
         int port = Integer.parseInt(prop.getProperty("port"));
@@ -233,7 +236,7 @@ public class App {
                     InternetAddress.parse(emailTo)
             );
             message.setSubject(mailSubject);
-            message.setText(msg);
+            message.setText(msg + msgTemperatureThresholdDeails);
 
             Transport.send(message);
 
