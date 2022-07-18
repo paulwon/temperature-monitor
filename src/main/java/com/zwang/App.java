@@ -97,7 +97,8 @@ public class App {
             System.out.println(msg );
             if (mailAlertSent == false) {
                 System.out.println("Send alert email ...");
-                sendEmail(msg);
+                String mailSubject = "Lab temperature monitoring - alert";
+                sendEmail(msg, mailSubject);
                 mailAlertSent = true;
                 mailRecoverSent = false;
             } else {
@@ -111,7 +112,8 @@ public class App {
             System.out.println(msg);
             if (mailAlertSent == true && mailRecoverSent == false) {
                 System.out.println("Send email for for recovery ...");
-                sendEmail(msg);
+                String mailSubject = "Lab temperature monitoring - recovered";
+                sendEmail(msg, mailSubject);
                 mailAlertSent = false;
                 mailRecoverSent = true;
             }  else {
@@ -201,7 +203,7 @@ public class App {
         }
     }
 
-    private static void sendEmail(String msg) throws AddressException, MessagingException {
+    private static void sendEmail(String msg, String mailSubject) throws AddressException, MessagingException {
         final String username = App.emailUsername;
         final String password = App.emailPassword;
         final String emailTo = App.emailTo;
@@ -230,7 +232,7 @@ public class App {
                     Message.RecipientType.TO,
                     InternetAddress.parse(emailTo)
             );
-            message.setSubject("Lab temperature alert");
+            message.setSubject(mailSubject);
             message.setText(msg);
 
             Transport.send(message);
