@@ -3,3 +3,5 @@ temperaturemonitorjava.tgz
 *.tgz
 *.class
 test.java
+target/*
+target
