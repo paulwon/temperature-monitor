@@ -39,5 +39,6 @@ emailTo=xxx@domain.com
 temperatureThreshold=55
 # Threshold of the temperature (temperatureThreshold - temperatureThresholdDiff) that will trigger the recovery email
 temperatureThresholdDiff=4
-
+# Nunber of lines of temperature data in notification emails
+numberOfLinesTemperature = 12
 ```
