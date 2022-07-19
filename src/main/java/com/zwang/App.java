@@ -1,31 +1,42 @@
 package com.zwang;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.channel.Channel;
-
-import java.util.Date;
-
-import java.util.*;
-import javax.mail.*;
-import javax.mail.internet.*;
-
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 
 
@@ -40,7 +51,10 @@ public class App {
     private static String emailPassword = "";
     private static String emailTo = "";
     private static String jsonFilePath = "./temperature.json";
-    private static String msgTemperatureThresholdDeails;
+    private static String msgTemperatureThresholdDetails;
+    private static String msgTemperatureHistory = "";
+    private static int numberOfLinesTemperature;
+
 
     
     public static void main(String[] args) throws Exception {
@@ -58,8 +72,9 @@ public class App {
         temperatureThresholdDiff =  Integer.parseInt(prop.getProperty("temperatureThresholdDiff"));
         temperatureRecoveryThreshold = temperatureThreshold - temperatureThresholdDiff;
         intervalMinutes = Integer.parseInt(prop.getProperty("intervalMinutes"));
-        msgTemperatureThresholdDeails = "\nThreshold triggering alert notification:  " + temperatureThreshold + 
+        msgTemperatureThresholdDetails = "\nThreshold triggering alert notification:  " + temperatureThreshold + 
             "\nThreshold triggering recovery notification:  " + temperatureRecoveryThreshold;
+        numberOfLinesTemperature = Integer.parseInt(prop.getProperty("numberOfLinesTemperature"));
 
         String host = prop.getProperty("host");
         int port = Integer.parseInt(prop.getProperty("port"));
@@ -124,6 +139,43 @@ public class App {
             }
             
         }
+
+    }
+
+    private static String getTemperatureHistory(String jsonFilePath) throws IOException {
+        String content = "";
+        Path path = Paths.get(jsonFilePath);
+        long lines = 0;
+        lines = Files.lines(path).count();
+                   
+        if (lines < numberOfLinesTemperature) {
+            content = Files.readString(path);
+
+        } else {
+            List<String> linesList = readLastLine(new File(jsonFilePath), numberOfLinesTemperature);
+            content = String.join("\n", linesList);
+        }
+
+        return content;
+
+    }
+
+    public static List<String> readLastLine(File file, int numLastLineToRead) {
+
+        List<String> result = new ArrayList<>();
+
+        try (ReversedLinesFileReader reader = new ReversedLinesFileReader(file, StandardCharsets.UTF_8)) {
+
+            String line = "";
+            while ((line = reader.readLine()) != null && result.size() < numLastLineToRead) {
+                result.add(line);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return result;
 
     }
 
@@ -206,7 +258,9 @@ public class App {
         }
     }
 
-    private static void sendEmail(String msg, String mailSubject) throws AddressException, MessagingException {
+    private static void sendEmail(String msg, String mailSubject) throws AddressException, MessagingException, IOException {
+        msgTemperatureHistory =  "\nHistory of temperature reading:\n" + getTemperatureHistory(jsonFilePath);
+
         final String username = App.emailUsername;
         final String password = App.emailPassword;
         final String emailTo = App.emailTo;
@@ -236,7 +290,7 @@ public class App {
                     InternetAddress.parse(emailTo)
             );
             message.setSubject(mailSubject);
-            message.setText(msg + msgTemperatureThresholdDeails);
+            message.setText(msg + msgTemperatureThresholdDetails + msgTemperatureHistory);
 
             Transport.send(message);
 

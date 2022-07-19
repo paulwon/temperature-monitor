@@ -1,5 +1,9 @@
 FROM openjdk:17-jdk-alpine
 
+# Set the timezone
+RUN apk add --no-cache alpine-conf && \
+    setup-timezone -z Asia/Shanghai
+
 ARG JAR_FILE=./temperature-monitor-java.jar
 ARG PROP_FILE=./config.properties
 
