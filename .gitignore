@@ -4,4 +4,4 @@ temperaturemonitorjava.tgz
 *.class
 test.java
 target/*
-target
+target/
