@@ -2,3 +2,4 @@ config.properties
 temperaturemonitorjava.tgz
 *.tgz
 *.class
+test.java

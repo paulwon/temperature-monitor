@@ -264,7 +264,6 @@ public class App {
         final String username = App.emailUsername;
         final String password = App.emailPassword;
         final String emailTo = App.emailTo;
-
         // System.out.println(emailUsername + " " + emailPassword);
 
         Properties prop = new Properties();
