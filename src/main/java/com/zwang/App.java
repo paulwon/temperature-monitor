@@ -42,10 +42,12 @@ import org.apache.sshd.common.channel.Channel;
 
 public class App {
     private static  int intervalMinutes;
-    private static  int temperatureThreshold;
+    private static  int temperatureThresholdYellow;
+    private static  int temperatureThresholdRed;
     private static  int temperatureRecoveryThreshold;
     private static  int temperatureThresholdDiff;
-    private static boolean mailAlertSent = false;
+    private static boolean mailYellowAlertSent = false;
+    private static boolean mailRedAlertSent = false;
     private static boolean mailRecoverSent = false;
     private static String emailUsername = "";
     private static String emailPassword = "";
@@ -68,12 +70,16 @@ public class App {
         emailUsername = prop.getProperty("emailUsername");
         emailPassword = prop.getProperty("emailPassword");
         emailTo = prop.getProperty("emailTo");
-        temperatureThreshold =  Integer.parseInt(prop.getProperty("temperatureThreshold"));
+        temperatureThresholdYellow =  Integer.parseInt(prop.getProperty("temperatureThresholdYellow"));
+        temperatureThresholdRed =  Integer.parseInt(prop.getProperty("temperatureThresholdRed"));
         temperatureThresholdDiff =  Integer.parseInt(prop.getProperty("temperatureThresholdDiff"));
-        temperatureRecoveryThreshold = temperatureThreshold - temperatureThresholdDiff;
+        temperatureRecoveryThreshold = temperatureThresholdYellow - temperatureThresholdDiff;
         intervalMinutes = Integer.parseInt(prop.getProperty("intervalMinutes"));
-        msgTemperatureThresholdDetails = "\nThreshold triggering alert notification:  " + temperatureThreshold + 
-            "\nThreshold triggering recovery notification:  " + temperatureRecoveryThreshold;
+        msgTemperatureThresholdDetails = 
+            "\nThreshold triggering yellow alert notification:  " + temperatureThresholdYellow + 
+            "\nThreshold triggering red alert notification:  " + temperatureThresholdRed + 
+            "\nThreshold triggering recovery notification:  " + temperatureRecoveryThreshold
+            ;
         numberOfLinesTemperature = Integer.parseInt(prop.getProperty("numberOfLinesTemperature"));
 
         String host = prop.getProperty("host");
@@ -85,7 +91,8 @@ public class App {
 
         // appEntry(username, password, host, port, defaultTimeoutSeconds, command);
 
-        System.out.println("Temperature alert threshold: " + temperatureThreshold);
+        System.out.println("Temperature yellow alert threshold: " + temperatureThresholdYellow);
+        System.out.println("Temperature red alert threshold: " + temperatureThresholdRed);
         System.out.println("Temperature recovery threshold: " + temperatureRecoveryThreshold);
 
         Runnable appEntryRunnable = new Runnable() {
@@ -110,29 +117,46 @@ public class App {
         Temperature temperature =  getTemperature(temperatureStr);
         System.out.println(temperature.getTimestamp() + ", " + temperature.getTimestampString() + ", " + temperature.getValue());
         writeFile(temperature);
-        if (temperature.getValue() >= temperatureThreshold) {
-            String msg = "Temperature is too high !!!. The current temperature is " + temperature.getValue();
+        // Send yellow alert
+        if (temperature.getValue() >= temperatureThresholdYellow && temperature.getValue() < temperatureThresholdRed) {
+            String msg = "Yellow alert: Temperature is high!. The current temperature is " + temperature.getValue();
             System.out.println(msg );
-            if (mailAlertSent == false) {
-                System.out.println("Send alert email ...");
-                String mailSubject = "Lab temperature monitoring - alert";
+            if (mailYellowAlertSent == false) {
+                System.out.println("Send yellow alert email ...");
+                String mailSubject = "Lab temperature monitoring - yellow alert";
                 sendEmail(msg, mailSubject);
-                mailAlertSent = true;
+                mailYellowAlertSent = true;
                 mailRecoverSent = false;
             } else {
                 System.out.println("Not sending the alert mail because it has already been sent");
             }
                     
         }
-
+        // Send red alert
+        if (temperature.getValue() >= temperatureThresholdRed) {
+            String msg = "Red alert: Temperature is too high !!!. The current temperature is " + temperature.getValue();
+            System.out.println(msg );
+            if (mailRedAlertSent == false) {
+                System.out.println("Send red alert email ...");
+                String mailSubject = "Lab temperature monitoring - red alert";
+                sendEmail(msg, mailSubject);
+                mailRedAlertSent = true;
+                mailRecoverSent = false;
+            } else {
+                System.out.println("Not sending the alert mail because it has already been sent");
+            }
+                    
+        }
+        // Send recovery notification
         if (temperature.getValue() <= (temperatureRecoveryThreshold)) {
             String msg = "Temperature is normal. The current temperature is " + temperature.getValue();
             System.out.println(msg);
-            if (mailAlertSent == true && mailRecoverSent == false) {
+            if ((mailYellowAlertSent == true || mailRedAlertSent == true ) && mailRecoverSent == false) {
                 System.out.println("Send email for for recovery ...");
                 String mailSubject = "Lab temperature monitoring - recovered";
                 sendEmail(msg, mailSubject);
-                mailAlertSent = false;
+                mailYellowAlertSent = false;
+                mailRedAlertSent = false;
                 mailRecoverSent = true;
             }  else {
                 System.out.println("Not sending the recovery mail because it has already been sent or the alert mail has not been sent");
