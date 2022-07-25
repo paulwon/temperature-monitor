@@ -1,4 +1,6 @@
 config.properties
+config*.properties
+config_prod.properties
 temperaturemonitorjava.tgz
 *.tgz
 *.class
