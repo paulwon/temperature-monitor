@@ -126,7 +126,7 @@ public class App {
         String temperatureStr = sshToDevice("AP",username, password, host, port, defaultTimeoutSeconds, command);
         // System.out.println(temperatureStr);
         Temperature temperature =  getTemperature(temperatureStr);
-        System.out.println(temperature.getTimestamp() + ", " + temperature.getTimestampString() + ", " + temperature.getValue());
+        System.out.println(temperature.getTimestampString() + ", " + temperature.getValue());
         writeFile(temperature);
         // Send yellow alert
         if (temperature.getValue() >= temperatureThresholdYellow && temperature.getValue() < temperatureThresholdRed) {
@@ -232,9 +232,8 @@ public class App {
     }
 
     private static void writeFile(Temperature temperature) throws IOException {
-        String textToAppend = "{\"timestamp\":" + temperature.getTimestamp() 
-            + "," + "\"timestampString\":" + "\"" +temperature.getTimestampString() + "\""
-            + "," + "\"value\":" + temperature.getValue() + "}";
+        String textToAppend = "{\"timestampString\":"  + "\"" +temperature.getTimestampString()  + "\"" 
+                             + "," + "\"value\":" + temperature.getValue() + "}";
         FileWriter fileWriter = new FileWriter(jsonFilePath, true);
         try (PrintWriter printWriter = new PrintWriter(fileWriter)) {
             printWriter.println(textToAppend);
