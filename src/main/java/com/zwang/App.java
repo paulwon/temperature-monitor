@@ -56,6 +56,11 @@ public class App {
     private static String msgTemperatureThresholdDetails;
     private static String msgTemperatureHistory = "";
     private static int numberOfLinesTemperature;
+    private static String usernameSpeaker, passwordSpeaker, hostSpeaker;
+    private static int portSpeaker;
+    private static String commandSpeaker;
+    private static long defaultTimeoutSeconds = 3l;
+    private static long defaultTimeoutSecondsSpeaker = 40l;
 
 
     
@@ -64,8 +69,6 @@ public class App {
         InputStream input = null;
         input = new FileInputStream("./config.properties");
         prop.load(input);
-        String username = prop.getProperty("username");
-        String password = prop.getProperty("password");
 
         emailUsername = prop.getProperty("emailUsername");
         emailPassword = prop.getProperty("emailPassword");
@@ -82,11 +85,19 @@ public class App {
             ;
         numberOfLinesTemperature = Integer.parseInt(prop.getProperty("numberOfLinesTemperature"));
 
+        // Connection info of the monitored device
+        String username = prop.getProperty("username");
+        String password = prop.getProperty("password");
         String host = prop.getProperty("host");
         int port = Integer.parseInt(prop.getProperty("port"));
-        long defaultTimeoutSeconds = 3l;
-        String command = prop.getProperty("command");;
+        String command = prop.getProperty("command");
 
+        // Read the properties for the connection information of the Speaker (MacMini)
+        usernameSpeaker = prop.getProperty("usernameSpeaker");
+        passwordSpeaker = prop.getProperty("passwordSpeaker");
+        hostSpeaker = prop.getProperty("hostSpeaker");
+        portSpeaker = Integer.parseInt(prop.getProperty("portSpeaker"));
+        
         new FileOutputStream(jsonFilePath).close();
 
         // appEntry(username, password, host, port, defaultTimeoutSeconds, command);
@@ -112,7 +123,7 @@ public class App {
     }
     
     private static void appEntry(String username, String password, String host, int port, long defaultTimeoutSeconds, String command) throws Exception {
-        String temperatureStr = sshToAp(username, password, host, port, defaultTimeoutSeconds, command);
+        String temperatureStr = sshToDevice("AP",username, password, host, port, defaultTimeoutSeconds, command);
         // System.out.println(temperatureStr);
         Temperature temperature =  getTemperature(temperatureStr);
         System.out.println(temperature.getTimestamp() + ", " + temperature.getTimestampString() + ", " + temperature.getValue());
@@ -121,6 +132,15 @@ public class App {
         if (temperature.getValue() >= temperatureThresholdYellow && temperature.getValue() < temperatureThresholdRed) {
             String msg = "Yellow alert: Temperature is high!. The current temperature is " + temperature.getValue();
             System.out.println(msg );
+            // Speaker
+            commandSpeaker = "say The temperature is high in the server room && sleep 10 && say The temperature is high in the server room && sleep 10 && say The temperature is high in the server room  \n";
+            try {
+               sshToDevice("Speaker",usernameSpeaker, passwordSpeaker, hostSpeaker, portSpeaker, defaultTimeoutSecondsSpeaker, commandSpeaker);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            // Email
             if (mailYellowAlertSent == false) {
                 System.out.println("Send yellow alert email ...");
                 String mailSubject = "Lab temperature monitoring - yellow alert";
@@ -136,12 +156,20 @@ public class App {
         if (temperature.getValue() >= temperatureThresholdRed) {
             String msg = "Red alert: Temperature is too high !!!. The current temperature is " + temperature.getValue();
             System.out.println(msg );
+            // speaker
+            commandSpeaker = "say The temperature is extremely high in the server room && sleep 10 && say The temperature is extremely high in the server room && sleep 10 && say The temperature is extremely high in the server room  \n";
+            try {
+                sshToDevice("Speaker",usernameSpeaker, passwordSpeaker, hostSpeaker, portSpeaker, defaultTimeoutSecondsSpeaker, commandSpeaker);
+            } catch (Exception e) {
+                 e.printStackTrace();
+            }
+            // email
             if (mailRedAlertSent == false) {
-                System.out.println("Send red alert email ...");
-                String mailSubject = "Lab temperature monitoring - red alert";
-                sendEmail(msg, mailSubject);
-                mailRedAlertSent = true;
-                mailRecoverSent = false;
+            System.out.println("Send red alert email ...");
+            String mailSubject = "Lab temperature monitoring - red alert";
+            sendEmail(msg, mailSubject);
+            mailRedAlertSent = true;
+            mailRecoverSent = false;
             } else {
                 System.out.println("Not sending the alert mail because it has already been sent");
             }
@@ -245,8 +273,8 @@ public class App {
        
     }
     
-    public static String sshToAp(String username, String password, String host, int port,long defaultTimeoutSeconds, String command) throws Exception {
-        System.out.println("ssh to AP. host " + host);
+    public static String sshToDevice(String deviceType, String username, String password, String host, int port,long defaultTimeoutSeconds, String command) throws Exception {
+        System.out.println("ssh to "+ deviceType +" host " + host);
         SshClient client = SshClient.setUpDefaultClient();
         client.start();
         try (ClientSession session = client.connect(username, host, port).verify(defaultTimeoutSeconds, TimeUnit.SECONDS).getSession()) {
@@ -282,6 +310,7 @@ public class App {
         }
     }
 
+    
     private static void sendEmail(String msg, String mailSubject) throws AddressException, MessagingException, IOException {
         msgTemperatureHistory =  "\nHistory of temperature reading:\n" + getTemperatureHistory(jsonFilePath);
 
