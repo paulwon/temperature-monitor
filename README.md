@@ -13,10 +13,12 @@
     ```
 - You can also build your docker image by using the file "Dockerfile" and run it as a container
 
-## config_prod.properties
-The file "config_prod.properties" needs to be placed under the same directory where the jar file runs. The same file is also needed when you create a docker image.
+## "config.properties" and "config_docker_prod.properties"
+- The file "config.properties" needs to be placed under the same directory where the jar file runs. 
+- The file "config_docker_prod.properties" is needed when you create a docker image.
+- The content of both files can be same if you don't distinguish between dev and production environment.
 
-The example of the file "config_prod.properties":
+The example of the file properties file:
 ```
 # SSH login name of the AP
 username=admin

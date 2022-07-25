@@ -5,7 +5,7 @@ RUN apk add --no-cache alpine-conf && \
     setup-timezone -z Asia/Shanghai
 
 ARG JAR_FILE=./temperature-monitor-java.jar
-ARG PROP_FILE=./config_prod.properties
+ARG PROP_FILE=./config_docker_prod.properties
 
 # cd /usr/local/runme
 WORKDIR /usr/local/runme
