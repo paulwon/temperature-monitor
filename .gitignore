@@ -7,3 +7,4 @@ temperaturemonitorjava.tgz
 test.java
 target/*
 target/
+temperature.json
